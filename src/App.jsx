@@ -43,12 +43,28 @@ const NUCLEI = [
   { id: "D", name: "Nucleus D", cluster: "Naperville South", health: 44, cycle: "reflection", activities: 2, inhabitants: 1, completedConcentric: false, lastMeeting: "14 days ago", undertakings: [], x: 380, y: 420 },
 ];
 
-const NODE_POSITIONS = [
-  { x: 255, y: 190 }, { x: 310, y: 245 }, { x: 260, y: 260 },
-  { x: 455, y: 310 }, { x: 505, y: 355 }, { x: 460, y: 370 },
-  { x: 615, y: 155 }, { x: 670, y: 200 }, { x: 630, y: 215 },
-  { x: 645, y: 170 }, { x: 355, y: 395 }, { x: 405, y: 445 },
-];
+const PATH_RING_RADIUS = { service: 8, accompanying: 14, participating: 35, conversations: 57 };
+
+function computePersonPositions(people, nuclei) {
+  const positions = {};
+  nuclei.forEach(nucleus => {
+    const nucleusPeople = people.filter(p => p.nucleus === nucleus.name);
+    ["service", "accompanying", "participating", "conversations"].forEach(path => {
+      const group = nucleusPeople.filter(p => p.path === path);
+      const r = PATH_RING_RADIUS[path];
+      group.forEach((person, idx) => {
+        const angle = group.length === 1
+          ? -Math.PI / 2
+          : (2 * Math.PI * idx / group.length) - Math.PI / 2;
+        positions[person.id] = {
+          x: nucleus.x + r * Math.cos(angle),
+          y: nucleus.y + r * Math.sin(angle),
+        };
+      });
+    });
+  });
+  return positions;
+}
 
 const clamp = (val, min, max) => Math.min(Math.max(val, min), max);
 
@@ -189,7 +205,7 @@ function AuthScreen({ onLogin }) {
 function GraphNode({ person, pos, isSelected, onClick }) {
   const [hovered, setHovered] = useState(false);
   const color = pathColor(person.path);
-  const size = person.path === "service" ? 13 : person.path === "accompanying" ? 10 : 8;
+  const size = person.path === "service" ? 7 : person.path === "accompanying" ? 6 : person.path === "participating" ? 7 : 7;
   const clipId = `pc-${person.id}`;
 
   return (
@@ -231,19 +247,38 @@ function GraphNode({ person, pos, isSelected, onClick }) {
 function NucleusRing({ nucleus, isSelected, onClick }) {
   const [hovered, setHovered] = useState(false);
   const healthColor = nucleus.health > 75 ? COLORS.greenLight : nucleus.health > 50 ? COLORS.goldLight : COLORS.textMuted;
+  const ringColor = isSelected ? COLORS.gold : COLORS.border;
+  const ringWidth = isSelected ? 1.5 : 0.8;
 
   return (
-    <g onClick={onClick} style={{ cursor: "pointer" }}
+    <g style={{ cursor: "pointer" }}
       onMouseEnter={() => setHovered(true)} onMouseLeave={() => setHovered(false)}>
+      {/* Large transparent hit area — makes the whole nucleus clickable */}
+      <circle cx={nucleus.x} cy={nucleus.y} r={68} fill="transparent" onClick={onClick} />
+
+      {/* Concentric ring boundaries */}
+      {/* Outermost: conversations zone */}
       <circle cx={nucleus.x} cy={nucleus.y} r={68}
-        fill="none" stroke={isSelected ? COLORS.gold : COLORS.border}
-        strokeWidth={isSelected ? 1.5 : 0.5} strokeDasharray={isSelected ? "none" : "4 4"} />
+        fill={isSelected ? `${COLORS.gold}06` : "none"}
+        stroke={ringColor} strokeWidth={ringWidth} strokeDasharray={isSelected ? "none" : "4 4"} />
+      {/* Middle: participating zone */}
+      <circle cx={nucleus.x} cy={nucleus.y} r={46}
+        fill="none" stroke={ringColor} strokeWidth={ringWidth * 0.7} strokeDasharray="3 5"
+        strokeOpacity={0.6} />
+      {/* Inner: accompanying zone */}
+      <circle cx={nucleus.x} cy={nucleus.y} r={22}
+        fill="none" stroke={ringColor} strokeWidth={ringWidth * 0.7} strokeDasharray="2 4"
+        strokeOpacity={0.5} />
+
+      {/* Center glow halos */}
       <circle cx={nucleus.x} cy={nucleus.y} r={12} fill={healthColor} fillOpacity={0.07} />
       <circle cx={nucleus.x} cy={nucleus.y} r={7}  fill={healthColor} fillOpacity={0.14} />
+      {/* Center dot */}
       <circle cx={nucleus.x} cy={nucleus.y} r={4}
         fill={healthColor} fillOpacity={hovered || isSelected ? 1 : 0.8}
-        filter="url(#nodeGlow)" />
-      <text x={nucleus.x} y={nucleus.y + 22} textAnchor="middle" fill={COLORS.textMuted}
+        filter="url(#nodeGlow)" onClick={onClick} />
+
+      <text x={nucleus.x} y={nucleus.y + 80} textAnchor="middle" fill={COLORS.textMuted}
         fontSize={10} fontFamily="system-ui">{nucleus.name}</text>
     </g>
   );
@@ -258,10 +293,11 @@ const LEGEND_ITEMS = [
   ["conversations", COLORS.textMuted,  "In Conversations"],
 ];
 
-function GraphMap({ people, nuclei, selectedPerson, selectedNucleus, onSelectPerson, onSelectNucleus, filters }) {
+function GraphMap({ people, nuclei, selectedPerson, selectedNucleus, onSelectPerson, onSelectNucleus, filters, isFullscreen, onToggleFullscreen }) {
   const containerRef = useRef(null);
   const [transform, setTransform] = useState({ dx: 0, dy: 0, scale: 1 });
   const [isDragging, setIsDragging] = useState(false);
+  const [legendCollapsed, setLegendCollapsed] = useState(window.innerWidth < 600);
 
   const gestureRef = useRef({ isPanning: false, lastX: 0, lastY: 0, lastDist: null });
 
@@ -403,6 +439,8 @@ function GraphMap({ people, nuclei, selectedPerson, selectedNucleus, onSelectPer
     };
   }, [onMouseMove, onMouseUp]);
 
+  const personPositions = computePersonPositions(people, nuclei);
+
   const filteredPeople = people.filter(p => {
     if (filters.path    && p.path    !== filters.path)    return false;
     if (filters.cluster && p.cluster !== filters.cluster) return false;
@@ -412,7 +450,7 @@ function GraphMap({ people, nuclei, selectedPerson, selectedNucleus, onSelectPer
 
   const connections = filteredPeople.flatMap(p =>
     filteredPeople.filter(q => q.id !== p.id && q.nucleus === p.nucleus && p.id < q.id)
-      .map(q => ({ from: NODE_POSITIONS[p.id - 1], to: NODE_POSITIONS[q.id - 1] }))
+      .map(q => ({ from: personPositions[p.id], to: personPositions[q.id] }))
   );
 
   return (
@@ -449,32 +487,73 @@ function GraphMap({ people, nuclei, selectedPerson, selectedNucleus, onSelectPer
             onClick={() => onSelectNucleus(n)} />
         ))}
         {filteredPeople.map(p => (
-          <GraphNode key={p.id} person={p} pos={NODE_POSITIONS[p.id - 1]}
+          <GraphNode key={p.id} person={p} pos={personPositions[p.id]}
             isSelected={selectedPerson?.id === p.id}
             onClick={() => onSelectPerson(p)} />
         ))}
       </svg>
 
-      {/* Fixed legend — stays in place while panning/zooming */}
+      {/* Collapsible legend */}
       <div style={{
-        position: "absolute", bottom: 16, left: 16, pointerEvents: "none",
-        background: "rgba(8,18,38,0.82)", backdropFilter: "blur(12px)",
+        position: "absolute", bottom: 16, left: 16,
+        background: "rgba(8,18,38,0.88)", backdropFilter: "blur(12px)",
         border: `1px solid ${COLORS.border}`, borderRadius: 12,
-        padding: "10px 14px", display: "flex", flexDirection: "column", gap: 8,
+        overflow: "hidden",
       }}>
-        {LEGEND_ITEMS.map(([key, color, label]) => (
-          <div key={key} style={{ display: "flex", alignItems: "center", gap: 9 }}>
-            <svg width={14} height={14} style={{ flexShrink: 0 }}>
-              <circle cx={7} cy={7} r={6} fill={color} fillOpacity={0.88} />
-              <circle cx={7} cy={4.5} r={1.8} fill="rgba(255,255,255,0.85)" />
-              <ellipse cx={7} cy={10.5} rx={3.2} ry={2.4} fill="rgba(255,255,255,0.72)" />
-            </svg>
-            <span style={{ fontSize: 11, color: COLORS.textMuted, fontFamily: "system-ui", whiteSpace: "nowrap" }}>
-              {label}
-            </span>
+        <button
+          onClick={() => setLegendCollapsed(v => !v)}
+          style={{
+            display: "flex", alignItems: "center", gap: 6,
+            width: "100%", padding: "8px 12px",
+            background: "none", border: "none", cursor: "pointer",
+            color: COLORS.textMuted, fontSize: 11, fontFamily: "system-ui",
+          }}
+        >
+          <span style={{ fontSize: 13 }}>◉</span>
+          <span style={{ whiteSpace: "nowrap" }}>Legend</span>
+          <span style={{ marginLeft: "auto", fontSize: 10, opacity: 0.7 }}>{legendCollapsed ? "▲" : "▼"}</span>
+        </button>
+        {!legendCollapsed && (
+          <div style={{ padding: "4px 12px 10px", display: "flex", flexDirection: "column", gap: 7 }}>
+            {LEGEND_ITEMS.map(([key, color, label]) => (
+              <div key={key} style={{ display: "flex", alignItems: "center", gap: 9, pointerEvents: "none" }}>
+                <svg width={14} height={14} style={{ flexShrink: 0 }}>
+                  <circle cx={7} cy={7} r={6} fill={color} fillOpacity={0.88} />
+                  <circle cx={7} cy={4.5} r={1.8} fill="rgba(255,255,255,0.85)" />
+                  <ellipse cx={7} cy={10.5} rx={3.2} ry={2.4} fill="rgba(255,255,255,0.72)" />
+                </svg>
+                <span style={{ fontSize: 11, color: COLORS.textMuted, fontFamily: "system-ui", whiteSpace: "nowrap" }}>
+                  {label}
+                </span>
+              </div>
+            ))}
+            <div style={{ marginTop: 4, borderTop: `1px solid ${COLORS.border}`, paddingTop: 6, display: "flex", flexDirection: "column", gap: 5 }}>
+              <div style={{ fontSize: 10, color: COLORS.textDim, fontFamily: "system-ui" }}>Rings (outer → inner)</div>
+              {[["Conversations", COLORS.textMuted], ["Participating", COLORS.greenLight], ["Accompanying", COLORS.tealLight], ["Service", COLORS.goldLight]].map(([l, c]) => (
+                <div key={l} style={{ display: "flex", alignItems: "center", gap: 7, pointerEvents: "none" }}>
+                  <div style={{ width: 10, height: 10, borderRadius: "50%", border: `1.5px solid ${c}`, flexShrink: 0 }} />
+                  <span style={{ fontSize: 11, color: COLORS.textMuted, fontFamily: "system-ui" }}>{l}</span>
+                </div>
+              ))}
+            </div>
           </div>
-        ))}
+        )}
       </div>
+
+      {/* Fullscreen toggle button */}
+      <button
+        onClick={onToggleFullscreen}
+        style={{
+          position: "absolute", bottom: 16, right: 16,
+          background: "rgba(8,18,38,0.88)", backdropFilter: "blur(12px)",
+          border: `1px solid ${COLORS.border}`, borderRadius: 10,
+          padding: "8px 12px", color: COLORS.textMuted,
+          cursor: "pointer", fontSize: 16, lineHeight: 1,
+        }}
+        title={isFullscreen ? "Exit fullscreen" : "Expand map"}
+      >
+        {isFullscreen ? "⤡" : "⤢"}
+      </button>
     </div>
   );
 }
@@ -876,6 +955,7 @@ export default function App() {
   const [selectedNucleus, setSelectedNucleus] = useState(null);
   const [filters, setFilters] = useState({ search: "", cluster: "", path: "" });
   const [showAddModal, setShowAddModal] = useState(false);
+  const [mapFullscreen, setMapFullscreen] = useState(false);
 
   if (!authed) return <AuthScreen onLogin={() => setAuthed(true)} />;
 
@@ -953,23 +1033,31 @@ export default function App() {
         {/* Map view */}
         {view === "map" && (
           <div style={{ flex: 1, display: "flex", flexDirection: "column", overflow: "auto" }}>
-            <div style={{ padding: "16px 24px 0" }}>
-              <DashboardStats people={people} />
-              <FilterBar filters={filters} setFilters={setFilters} />
-            </div>
-            <div style={{ flex: "none", display: "flex", overflow: "hidden", padding: "0 24px 24px", gap: 20 }}>
+            {!mapFullscreen && (
+              <div style={{ padding: "16px 24px 0" }}>
+                <DashboardStats people={people} />
+                <FilterBar filters={filters} setFilters={setFilters} />
+              </div>
+            )}
+            <div style={{
+              flex: 1, display: "flex", overflow: "hidden",
+              padding: mapFullscreen ? 0 : "0 24px 24px", gap: mapFullscreen ? 0 : 20,
+              ...(mapFullscreen ? { position: "fixed", inset: 0, zIndex: 40, background: COLORS.deepBlue } : {}),
+            }}>
               <div style={{
-                flex: 1, background: "rgba(5,15,35,0.4)", border: `1px solid ${COLORS.border}`,
-                borderRadius: 20, overflow: "hidden", backdropFilter: "blur(8px)",
+                flex: 1, background: "rgba(5,15,35,0.4)", border: mapFullscreen ? "none" : `1px solid ${COLORS.border}`,
+                borderRadius: mapFullscreen ? 0 : 20, overflow: "hidden", backdropFilter: "blur(8px)",
               }}>
                 <GraphMap
                   people={people} nuclei={NUCLEI}
                   selectedPerson={selectedPerson} selectedNucleus={selectedNucleus}
                   onSelectPerson={handleSelectPerson} onSelectNucleus={handleSelectNucleus}
                   filters={filters}
+                  isFullscreen={mapFullscreen}
+                  onToggleFullscreen={() => setMapFullscreen(v => !v)}
                 />
               </div>
-              {(selectedPerson || selectedNucleus) && (
+              {!mapFullscreen && (selectedPerson || selectedNucleus) && (
                 <div style={{ width: 320, overflowY: "auto" }}>
                   {selectedPerson && (
                     <PersonPanel person={selectedPerson} onClose={() => setSelectedPerson(null)} />
@@ -980,6 +1068,23 @@ export default function App() {
                 </div>
               )}
             </div>
+            {/* Slide-up panel when fullscreen and something is selected */}
+            {mapFullscreen && (selectedPerson || selectedNucleus) && (
+              <div style={{
+                position: "fixed", bottom: 0, left: 0, right: 0, zIndex: 50,
+                maxHeight: "55vh", overflowY: "auto",
+                background: COLORS.surfaceAlt, borderTop: `1px solid ${COLORS.border}`,
+                backdropFilter: "blur(20px)", borderRadius: "20px 20px 0 0",
+                padding: "20px 20px 32px",
+              }}>
+                {selectedPerson && (
+                  <PersonPanel person={selectedPerson} onClose={() => setSelectedPerson(null)} />
+                )}
+                {selectedNucleus && (
+                  <NucleusPanel nucleus={selectedNucleus} people={people} onClose={() => setSelectedNucleus(null)} />
+                )}
+              </div>
+            )}
           </div>
         )}
 
