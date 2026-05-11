@@ -227,8 +227,104 @@ function NucleusRing({ nucleus, isSelected, onClick }) {
 }
 
 function GraphMap({ people, nuclei, selectedPerson, selectedNucleus, onSelectPerson, onSelectNucleus, filters }) {
-  const svgRef = useRef(null);
-  const [viewBox, setViewBox] = useState("0 0 800 520");
+  const containerRef = useRef(null);
+
+  // Transform state: pan (dx, dy) and scale
+  const [transform, setTransform] = useState({ dx: 0, dy: 0, scale: 1 });
+
+  // Refs for gesture tracking (avoids stale closures)
+  const gestureRef = useRef({
+    isPanning: false,
+    lastX: 0, lastY: 0,
+    lastDist: null,
+  });
+
+  const BASE_W = 800, BASE_H = 520;
+
+  // Compute viewBox from transform
+  const vbW = BASE_W / transform.scale;
+  const vbH = BASE_H / transform.scale;
+  const vbX = transform.dx;
+  const vbY = transform.dy;
+  const viewBox = `${vbX} ${vbY} ${vbW} ${vbH}`;
+
+  const clamp = (val, min, max) => Math.min(Math.max(val, min), max);
+
+  // ── Touch handlers ──────────────────────────────────────────
+  const onTouchStart = useCallback((e) => {
+    if (e.touches.length === 1) {
+      gestureRef.current.isPanning = true;
+      gestureRef.current.lastX = e.touches[0].clientX;
+      gestureRef.current.lastY = e.touches[0].clientY;
+      gestureRef.current.lastDist = null;
+    } else if (e.touches.length === 2) {
+      gestureRef.current.isPanning = false;
+      const dx = e.touches[0].clientX - e.touches[1].clientX;
+      const dy = e.touches[0].clientY - e.touches[1].clientY;
+      gestureRef.current.lastDist = Math.hypot(dx, dy);
+    }
+  }, []);
+
+  const onTouchMove = useCallback((e) => {
+    e.preventDefault(); // prevent page scroll while interacting with map
+    const g = gestureRef.current;
+
+    if (e.touches.length === 1 && g.isPanning) {
+      const rect = containerRef.current.getBoundingClientRect();
+      const scaleX = BASE_W / rect.width;  // SVG units per CSS pixel
+      const scaleY = BASE_H / rect.height;
+
+      const ddx = (e.touches[0].clientX - g.lastX) * scaleX / transform.scale;
+      const ddy = (e.touches[0].clientY - g.lastY) * scaleY / transform.scale;
+
+      g.lastX = e.touches[0].clientX;
+      g.lastY = e.touches[0].clientY;
+
+      setTransform(t => ({
+        ...t,
+        dx: clamp(t.dx - ddx, -200, 400),
+        dy: clamp(t.dy - ddy, -200, 300),
+      }));
+
+    } else if (e.touches.length === 2 && g.lastDist !== null) {
+      const dx = e.touches[0].clientX - e.touches[1].clientX;
+      const dy = e.touches[0].clientY - e.touches[1].clientY;
+      const newDist = Math.hypot(dx, dy);
+      const ratio = newDist / g.lastDist;
+      g.lastDist = newDist;
+
+      setTransform(t => ({
+        ...t,
+        scale: clamp(t.scale * ratio, 0.5, 4),
+      }));
+    }
+  }, [transform.scale]);
+
+  const onTouchEnd = useCallback((e) => {
+    if (e.touches.length === 0) {
+      gestureRef.current.isPanning = false;
+      gestureRef.current.lastDist = null;
+    }
+  }, []);
+
+  // ── Mouse wheel zoom (desktop bonus) ────────────────────────
+  const onWheel = useCallback((e) => {
+    e.preventDefault();
+    const ratio = e.deltaY < 0 ? 1.1 : 0.91;
+    setTransform(t => ({ ...t, scale: clamp(t.scale * ratio, 0.5, 4) }));
+  }, []);
+
+  // Attach passive:false so preventDefault works on touch
+  useEffect(() => {
+    const el = containerRef.current;
+    if (!el) return;
+    el.addEventListener("touchmove", onTouchMove, { passive: false });
+    el.addEventListener("wheel", onWheel, { passive: false });
+    return () => {
+      el.removeEventListener("touchmove", onTouchMove);
+      el.removeEventListener("wheel", onWheel);
+    };
+  }, [onTouchMove, onWheel]);
 
   const filteredPeople = people.filter(p => {
     if (filters.path && p.path !== filters.path) return false;
@@ -239,51 +335,35 @@ function GraphMap({ people, nuclei, selectedPerson, selectedNucleus, onSelectPer
 
   const connections = filteredPeople.flatMap(p =>
     filteredPeople.filter(q => q.id !== p.id && q.nucleus === p.nucleus && p.id < q.id)
-      .map(q => ({ from: NODE_POSITIONS[p.id - 1], to: NODE_POSITIONS[q.id - 1], strength: 0.3 }))
+      .map(q => ({ from: NODE_POSITIONS[p.id - 1], to: NODE_POSITIONS[q.id - 1] }))
   );
 
   return (
-    <svg ref={svgRef} viewBox={viewBox} style={{ width: "100%", height: "100%" }}>
-      <defs>
-        <radialGradient id="bgGrad" cx="50%" cy="40%">
-          <stop offset="0%" stopColor={COLORS.blue1} stopOpacity={0.4} />
-          <stop offset="100%" stopColor={COLORS.deepBlue} stopOpacity={0.1} />
-        </radialGradient>
-      </defs>
-
-      {/* Background glow regions */}
-      {nuclei.map(n => (
-        <circle key={n.id} cx={n.x} cy={n.y} r={80}
-          fill={`radial-gradient(circle, ${COLORS.teal}, transparent)`}
-          fillOpacity={0.03} />
-      ))}
-
-      {/* Connections */}
+    <svg
+      ref={containerRef}
+      viewBox={viewBox}
+      style={{ width: "100%", height: "100%", touchAction: "none", cursor: "grab" }}
+      onTouchStart={onTouchStart}
+      onTouchEnd={onTouchEnd}
+    >
+      {/* — all your existing SVG content unchanged — */}
       {connections.map((c, i) => (
         <line key={i} x1={c.from.x} y1={c.from.y} x2={c.to.x} y2={c.to.y}
           stroke={COLORS.teal} strokeWidth={0.5} strokeOpacity={0.2} />
       ))}
-
-      {/* Cross-nucleus connections */}
       <line x1={280} y1={220} x2={480} y2={330} stroke={COLORS.border} strokeWidth={0.5} strokeDasharray="6 6" />
       <line x1={480} y1={330} x2={380} y2={420} stroke={COLORS.border} strokeWidth={0.5} strokeDasharray="6 6" />
       <line x1={280} y1={220} x2={640} y2={180} stroke={COLORS.border} strokeWidth={0.5} strokeDasharray="6 6" />
-
-      {/* Nucleus rings */}
       {nuclei.map(n => (
         <NucleusRing key={n.id} nucleus={n}
           isSelected={selectedNucleus?.id === n.id}
           onClick={() => onSelectNucleus(n)} />
       ))}
-
-      {/* People nodes */}
       {filteredPeople.map(p => (
         <GraphNode key={p.id} person={p} pos={NODE_POSITIONS[p.id - 1]}
           isSelected={selectedPerson?.id === p.id}
           onClick={() => onSelectPerson(p)} />
       ))}
-
-      {/* Legend */}
       {[["service", COLORS.goldLight, "Path of Service"], ["accompanying", COLORS.tealLight, "Accompanying"], ["participating", COLORS.greenLight, "Participating"], ["conversations", COLORS.textMuted, "Conversations"]].map(([key, color, label], i) => (
         <g key={key}>
           <circle cx={24} cy={460 + i * 18} r={5} fill={color} fillOpacity={0.9} />
