@@ -264,11 +264,8 @@ function NucleusRing({ nucleus, isSelected, onClick }) {
     <g style={{ cursor: "pointer" }}
       onMouseEnter={() => setHovered(true)} onMouseLeave={() => setHovered(false)}>
 
-      {/* Nebula atmosphere — soft volumetric glow */}
-      <circle cx={nucleus.x} cy={nucleus.y} r={130} fill={healthColor} fillOpacity={0.010} />
-      <circle cx={nucleus.x} cy={nucleus.y} r={100} fill={healthColor} fillOpacity={0.018} />
-      <circle cx={nucleus.x} cy={nucleus.y} r={75}  fill={healthColor} fillOpacity={0.030} />
-      <circle cx={nucleus.x} cy={nucleus.y} r={50}  fill={healthColor} fillOpacity={0.040} />
+      {/* Nebula atmosphere — smooth radial glow, no discrete ring edges */}
+      <circle cx={nucleus.x} cy={nucleus.y} r={110} fill={`url(#nebula-${nucleus.id})`} />
 
       {/* Micro-stars scattered around the nucleus */}
       {Array.from({ length: 12 }, (_, i) => {
@@ -577,6 +574,16 @@ function GraphMap({ people, nuclei, selectedPerson, selectedNucleus, onSelectPer
               <feMergeNode in="SourceGraphic" />
             </feMerge>
           </filter>
+          {nuclei.map(n => {
+            const hc = n.health > 75 ? COLORS.greenLight : n.health > 50 ? COLORS.goldLight : COLORS.textMuted;
+            return (
+              <radialGradient key={n.id} id={`nebula-${n.id}`} cx="50%" cy="50%" r="50%">
+                <stop offset="0%"   stopColor={hc} stopOpacity={0.10} />
+                <stop offset="55%"  stopColor={hc} stopOpacity={0.04} />
+                <stop offset="100%" stopColor={hc} stopOpacity={0} />
+              </radialGradient>
+            );
+          })}
         </defs>
 
         {connections.map((c, i) => (
