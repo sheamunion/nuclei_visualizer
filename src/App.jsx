@@ -502,8 +502,7 @@ function DashboardStats({ people }) {
     { label: "In Conversations", value: people.filter(p => p.path === "conversations").length, color: COLORS.textMuted },
   ];
   return (
-    <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 12, marginBottom: 20 }}>
-      {stats.map(s => (
+    <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(140px, 1fr))", gap: 12, marginBottom: 20 }}>      {stats.map(s => (
         <div key={s.label} style={{
           background: COLORS.surfaceAlt, border: `1px solid ${COLORS.border}`,
           borderRadius: 16, padding: "16px 18px", backdropFilter: "blur(12px)",
@@ -768,12 +767,12 @@ export default function App() {
 
         {/* Map view */}
         {view === "map" && (
-          <div style={{ flex: 1, display: "flex", flexDirection: "column", overflow: "hidden" }}>
+          <div style={{ flex: 1, display: "flex", flexDirection: "column", overflow: "auto" }}>
             <div style={{ padding: "16px 24px 0" }}>
               <DashboardStats people={people} />
               <FilterBar filters={filters} setFilters={setFilters} />
             </div>
-            <div style={{ flex: 1, display: "flex", overflow: "hidden", padding: "0 24px 24px", gap: 20 }}>
+            <div style={{ flex: "none", display: "flex", overflow: "hidden", padding: "0 24px 24px", gap: 20 }}>
               <div style={{
                 flex: 1, background: "rgba(5,15,35,0.4)", border: `1px solid ${COLORS.border}`,
                 borderRadius: 20, overflow: "hidden", backdropFilter: "blur(8px)",
