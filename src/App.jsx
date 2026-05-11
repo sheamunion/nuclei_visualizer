@@ -50,6 +50,8 @@ const NODE_POSITIONS = [
   { x: 645, y: 170 }, { x: 355, y: 395 }, { x: 405, y: 445 },
 ];
 
+const clamp = (val, min, max) => Math.min(Math.max(val, min), max);
+
 const pathColor = (p) => ({
   service: COLORS.goldLight,
   accompanying: COLORS.tealLight,
@@ -187,20 +189,40 @@ function AuthScreen({ onLogin }) {
 function GraphNode({ person, pos, isSelected, onClick }) {
   const [hovered, setHovered] = useState(false);
   const color = pathColor(person.path);
-  const size = person.path === "service" ? 12 : person.path === "accompanying" ? 9 : 7;
+  const size = person.path === "service" ? 13 : person.path === "accompanying" ? 10 : 8;
+  const clipId = `pc-${person.id}`;
 
   return (
     <g onClick={onClick} style={{ cursor: "pointer" }}
       onMouseEnter={() => setHovered(true)} onMouseLeave={() => setHovered(false)}>
+      {/* Glow halos */}
+      <circle cx={pos.x} cy={pos.y} r={size + 16} fill={color} fillOpacity={0.04} />
+      <circle cx={pos.x} cy={pos.y} r={size + 9}  fill={color} fillOpacity={0.08} />
+      <circle cx={pos.x} cy={pos.y} r={size + 4}  fill={color} fillOpacity={0.15} />
       {(hovered || isSelected) && (
-        <circle cx={pos.x} cy={pos.y} r={size + 10} fill={color} fillOpacity={0.12} />
+        <circle cx={pos.x} cy={pos.y} r={size + 24} fill={color} fillOpacity={0.05} />
       )}
-      <circle cx={pos.x} cy={pos.y} r={size + 3} fill={color} fillOpacity={0.15} />
-      <circle cx={pos.x} cy={pos.y} r={size} fill={color} fillOpacity={isSelected ? 1 : 0.85}
-        stroke={isSelected ? "#fff" : color} strokeWidth={isSelected ? 2 : 0} />
+      {/* Main circle */}
+      <circle cx={pos.x} cy={pos.y} r={size}
+        fill={color} fillOpacity={isSelected ? 1 : 0.9}
+        filter="url(#nodeGlow)" />
       {isSelected && (
-        <text x={pos.x} y={pos.y - size - 6} textAnchor="middle" fill="#fff" fontSize={10}
-          fontFamily="system-ui">{person.name.split(" ")[0]}</text>
+        <circle cx={pos.x} cy={pos.y} r={size + 2}
+          fill="none" stroke="#fff" strokeWidth={1.5} strokeOpacity={0.8} />
+      )}
+      {/* Person silhouette clipped to circle */}
+      <clipPath id={clipId}>
+        <circle cx={pos.x} cy={pos.y} r={size} />
+      </clipPath>
+      <g clipPath={`url(#${clipId})`}>
+        <circle cx={pos.x} cy={pos.y - size * 0.22} r={size * 0.3} fill="rgba(255,255,255,0.88)" />
+        <ellipse cx={pos.x} cy={pos.y + size * 0.62} rx={size * 0.5} ry={size * 0.38} fill="rgba(255,255,255,0.72)" />
+      </g>
+      {isSelected && (
+        <text x={pos.x} y={pos.y - size - 8} textAnchor="middle" fill="#fff" fontSize={10}
+          fontFamily="system-ui" style={{ filter: "drop-shadow(0 1px 3px rgba(0,0,0,0.9))" }}>
+          {person.name.split(" ")[0]}
+        </text>
       )}
     </g>
   );
@@ -216,39 +238,63 @@ function NucleusRing({ nucleus, isSelected, onClick }) {
       <circle cx={nucleus.x} cy={nucleus.y} r={68}
         fill="none" stroke={isSelected ? COLORS.gold : COLORS.border}
         strokeWidth={isSelected ? 1.5 : 0.5} strokeDasharray={isSelected ? "none" : "4 4"} />
+      <circle cx={nucleus.x} cy={nucleus.y} r={12} fill={healthColor} fillOpacity={0.07} />
+      <circle cx={nucleus.x} cy={nucleus.y} r={7}  fill={healthColor} fillOpacity={0.14} />
       <circle cx={nucleus.x} cy={nucleus.y} r={4}
-        fill={healthColor} fillOpacity={hovered || isSelected ? 1 : 0.7} />
-      <circle cx={nucleus.x} cy={nucleus.y} r={8}
-        fill={healthColor} fillOpacity={0.2} />
+        fill={healthColor} fillOpacity={hovered || isSelected ? 1 : 0.8}
+        filter="url(#nodeGlow)" />
       <text x={nucleus.x} y={nucleus.y + 22} textAnchor="middle" fill={COLORS.textMuted}
         fontSize={10} fontFamily="system-ui">{nucleus.name}</text>
     </g>
   );
 }
 
+const BASE_W = 800, BASE_H = 520;
+
+const LEGEND_ITEMS = [
+  ["service",       COLORS.goldLight,  "Path of Service"],
+  ["accompanying",  COLORS.tealLight,  "Accompanying"],
+  ["participating", COLORS.greenLight, "Participating"],
+  ["conversations", COLORS.textMuted,  "In Conversations"],
+];
+
 function GraphMap({ people, nuclei, selectedPerson, selectedNucleus, onSelectPerson, onSelectNucleus, filters }) {
   const containerRef = useRef(null);
-
-  // Transform state: pan (dx, dy) and scale
   const [transform, setTransform] = useState({ dx: 0, dy: 0, scale: 1 });
+  const [isDragging, setIsDragging] = useState(false);
 
-  // Refs for gesture tracking (avoids stale closures)
-  const gestureRef = useRef({
-    isPanning: false,
-    lastX: 0, lastY: 0,
-    lastDist: null,
-  });
+  const gestureRef = useRef({ isPanning: false, lastX: 0, lastY: 0, lastDist: null });
 
-  const BASE_W = 800, BASE_H = 520;
+  const viewBox = `${transform.dx} ${transform.dy} ${BASE_W / transform.scale} ${BASE_H / transform.scale}`;
 
-  // Compute viewBox from transform
-  const vbW = BASE_W / transform.scale;
-  const vbH = BASE_H / transform.scale;
-  const vbX = transform.dx;
-  const vbY = transform.dy;
-  const viewBox = `${vbX} ${vbY} ${vbW} ${vbH}`;
+  // ── Mouse pan (desktop) ─────────────────────────────────────
+  const onMouseDown = useCallback((e) => {
+    if (e.button !== 0) return;
+    gestureRef.current.isPanning = true;
+    gestureRef.current.lastX = e.clientX;
+    gestureRef.current.lastY = e.clientY;
+    setIsDragging(true);
+  }, []);
 
-  const clamp = (val, min, max) => Math.min(Math.max(val, min), max);
+  const onMouseMove = useCallback((e) => {
+    const g = gestureRef.current;
+    if (!g.isPanning) return;
+    const cx = e.clientX, cy = e.clientY;
+    const lx = g.lastX, ly = g.lastY;
+    g.lastX = cx; g.lastY = cy;
+    const rect = containerRef.current?.getBoundingClientRect();
+    if (!rect) return;
+    setTransform(t => ({
+      ...t,
+      dx: clamp(t.dx - (cx - lx) * (BASE_W / rect.width)  / t.scale, -200, 400),
+      dy: clamp(t.dy - (cy - ly) * (BASE_H / rect.height) / t.scale, -200, 300),
+    }));
+  }, []);
+
+  const onMouseUp = useCallback(() => {
+    gestureRef.current.isPanning = false;
+    setIsDragging(false);
+  }, []);
 
   // ── Touch handlers ──────────────────────────────────────────
   const onTouchStart = useCallback((e) => {
@@ -259,77 +305,108 @@ function GraphMap({ people, nuclei, selectedPerson, selectedNucleus, onSelectPer
       gestureRef.current.lastDist = null;
     } else if (e.touches.length === 2) {
       gestureRef.current.isPanning = false;
-      const dx = e.touches[0].clientX - e.touches[1].clientX;
-      const dy = e.touches[0].clientY - e.touches[1].clientY;
-      gestureRef.current.lastDist = Math.hypot(dx, dy);
+      gestureRef.current.lastDist = Math.hypot(
+        e.touches[0].clientX - e.touches[1].clientX,
+        e.touches[0].clientY - e.touches[1].clientY,
+      );
     }
   }, []);
 
   const onTouchMove = useCallback((e) => {
-    e.preventDefault(); // prevent page scroll while interacting with map
+    e.preventDefault();
     const g = gestureRef.current;
+    const rect = containerRef.current?.getBoundingClientRect();
+    if (!rect) return;
 
     if (e.touches.length === 1 && g.isPanning) {
-      const rect = containerRef.current.getBoundingClientRect();
-      const scaleX = BASE_W / rect.width;  // SVG units per CSS pixel
-      const scaleY = BASE_H / rect.height;
-
-      const ddx = (e.touches[0].clientX - g.lastX) * scaleX / transform.scale;
-      const ddy = (e.touches[0].clientY - g.lastY) * scaleY / transform.scale;
-
-      g.lastX = e.touches[0].clientX;
-      g.lastY = e.touches[0].clientY;
-
+      const cx = e.touches[0].clientX, cy = e.touches[0].clientY;
+      const lx = g.lastX, ly = g.lastY;
+      g.lastX = cx; g.lastY = cy;
       setTransform(t => ({
         ...t,
-        dx: clamp(t.dx - ddx, -200, 400),
-        dy: clamp(t.dy - ddy, -200, 300),
+        dx: clamp(t.dx - (cx - lx) * (BASE_W / rect.width)  / t.scale, -200, 400),
+        dy: clamp(t.dy - (cy - ly) * (BASE_H / rect.height) / t.scale, -200, 300),
       }));
-
     } else if (e.touches.length === 2 && g.lastDist !== null) {
-      const dx = e.touches[0].clientX - e.touches[1].clientX;
-      const dy = e.touches[0].clientY - e.touches[1].clientY;
-      const newDist = Math.hypot(dx, dy);
+      const t0 = e.touches[0], t1 = e.touches[1];
+      const newDist = Math.hypot(t0.clientX - t1.clientX, t0.clientY - t1.clientY);
       const ratio = newDist / g.lastDist;
       g.lastDist = newDist;
-
-      setTransform(t => ({
-        ...t,
-        scale: clamp(t.scale * ratio, 0.5, 4),
-      }));
+      // pinch focal point as fraction of the SVG element
+      const fx = ((t0.clientX + t1.clientX) / 2 - rect.left) / rect.width;
+      const fy = ((t0.clientY + t1.clientY) / 2 - rect.top)  / rect.height;
+      setTransform(t => {
+        const newScale = clamp(t.scale * ratio, 0.5, 4);
+        const svgX = t.dx + fx * (BASE_W / t.scale);
+        const svgY = t.dy + fy * (BASE_H / t.scale);
+        return {
+          scale: newScale,
+          dx: clamp(svgX - fx * (BASE_W / newScale), -200, 400),
+          dy: clamp(svgY - fy * (BASE_H / newScale), -200, 300),
+        };
+      });
     }
-  }, [transform.scale]);
+  }, []);
 
   const onTouchEnd = useCallback((e) => {
     if (e.touches.length === 0) {
       gestureRef.current.isPanning = false;
       gestureRef.current.lastDist = null;
+    } else if (e.touches.length === 1) {
+      // lifted one finger during pinch — resume single-finger pan
+      gestureRef.current.lastDist = null;
+      gestureRef.current.isPanning = true;
+      gestureRef.current.lastX = e.touches[0].clientX;
+      gestureRef.current.lastY = e.touches[0].clientY;
     }
   }, []);
 
-  // ── Mouse wheel zoom (desktop bonus) ────────────────────────
+  // ── Wheel zoom at cursor (desktop) ──────────────────────────
   const onWheel = useCallback((e) => {
     e.preventDefault();
+    const rect = containerRef.current?.getBoundingClientRect();
+    if (!rect) return;
     const ratio = e.deltaY < 0 ? 1.1 : 0.91;
-    setTransform(t => ({ ...t, scale: clamp(t.scale * ratio, 0.5, 4) }));
+    const fx = (e.clientX - rect.left) / rect.width;
+    const fy = (e.clientY - rect.top)  / rect.height;
+    setTransform(t => {
+      const newScale = clamp(t.scale * ratio, 0.5, 4);
+      const svgX = t.dx + fx * (BASE_W / t.scale);
+      const svgY = t.dy + fy * (BASE_H / t.scale);
+      return {
+        scale: newScale,
+        dx: clamp(svgX - fx * (BASE_W / newScale), -200, 400),
+        dy: clamp(svgY - fy * (BASE_H / newScale), -200, 300),
+      };
+    });
   }, []);
 
-  // Attach passive:false so preventDefault works on touch
+  // Non-passive event listeners
   useEffect(() => {
     const el = containerRef.current;
     if (!el) return;
     el.addEventListener("touchmove", onTouchMove, { passive: false });
-    el.addEventListener("wheel", onWheel, { passive: false });
+    el.addEventListener("wheel",     onWheel,     { passive: false });
     return () => {
       el.removeEventListener("touchmove", onTouchMove);
-      el.removeEventListener("wheel", onWheel);
+      el.removeEventListener("wheel",     onWheel);
     };
   }, [onTouchMove, onWheel]);
 
+  // Window-level mouse listeners so drag continues outside SVG bounds
+  useEffect(() => {
+    window.addEventListener("mousemove", onMouseMove);
+    window.addEventListener("mouseup",   onMouseUp);
+    return () => {
+      window.removeEventListener("mousemove", onMouseMove);
+      window.removeEventListener("mouseup",   onMouseUp);
+    };
+  }, [onMouseMove, onMouseUp]);
+
   const filteredPeople = people.filter(p => {
-    if (filters.path && p.path !== filters.path) return false;
+    if (filters.path    && p.path    !== filters.path)    return false;
     if (filters.cluster && p.cluster !== filters.cluster) return false;
-    if (filters.search && !p.name.toLowerCase().includes(filters.search.toLowerCase())) return false;
+    if (filters.search  && !p.name.toLowerCase().includes(filters.search.toLowerCase())) return false;
     return true;
   });
 
@@ -339,38 +416,66 @@ function GraphMap({ people, nuclei, selectedPerson, selectedNucleus, onSelectPer
   );
 
   return (
-    <svg
-      ref={containerRef}
-      viewBox={viewBox}
-      style={{ width: "100%", height: "100%", touchAction: "none", cursor: "grab" }}
-      onTouchStart={onTouchStart}
-      onTouchEnd={onTouchEnd}
-    >
-      {/* — all your existing SVG content unchanged — */}
-      {connections.map((c, i) => (
-        <line key={i} x1={c.from.x} y1={c.from.y} x2={c.to.x} y2={c.to.y}
-          stroke={COLORS.teal} strokeWidth={0.5} strokeOpacity={0.2} />
-      ))}
-      <line x1={280} y1={220} x2={480} y2={330} stroke={COLORS.border} strokeWidth={0.5} strokeDasharray="6 6" />
-      <line x1={480} y1={330} x2={380} y2={420} stroke={COLORS.border} strokeWidth={0.5} strokeDasharray="6 6" />
-      <line x1={280} y1={220} x2={640} y2={180} stroke={COLORS.border} strokeWidth={0.5} strokeDasharray="6 6" />
-      {nuclei.map(n => (
-        <NucleusRing key={n.id} nucleus={n}
-          isSelected={selectedNucleus?.id === n.id}
-          onClick={() => onSelectNucleus(n)} />
-      ))}
-      {filteredPeople.map(p => (
-        <GraphNode key={p.id} person={p} pos={NODE_POSITIONS[p.id - 1]}
-          isSelected={selectedPerson?.id === p.id}
-          onClick={() => onSelectPerson(p)} />
-      ))}
-      {[["service", COLORS.goldLight, "Path of Service"], ["accompanying", COLORS.tealLight, "Accompanying"], ["participating", COLORS.greenLight, "Participating"], ["conversations", COLORS.textMuted, "Conversations"]].map(([key, color, label], i) => (
-        <g key={key}>
-          <circle cx={24} cy={460 + i * 18} r={5} fill={color} fillOpacity={0.9} />
-          <text x={34} y={464 + i * 18} fill={COLORS.textMuted} fontSize={11} fontFamily="system-ui">{label}</text>
-        </g>
-      ))}
-    </svg>
+    <div style={{ position: "relative", width: "100%", height: "100%" }}>
+      <svg
+        ref={containerRef}
+        viewBox={viewBox}
+        style={{ width: "100%", height: "100%", display: "block", touchAction: "none",
+          cursor: isDragging ? "grabbing" : "grab" }}
+        onMouseDown={onMouseDown}
+        onTouchStart={onTouchStart}
+        onTouchEnd={onTouchEnd}
+      >
+        <defs>
+          <filter id="nodeGlow" x="-80%" y="-80%" width="260%" height="260%">
+            <feGaussianBlur in="SourceGraphic" stdDeviation="2.5" result="blur" />
+            <feMerge>
+              <feMergeNode in="blur" />
+              <feMergeNode in="SourceGraphic" />
+            </feMerge>
+          </filter>
+        </defs>
+
+        {connections.map((c, i) => (
+          <line key={i} x1={c.from.x} y1={c.from.y} x2={c.to.x} y2={c.to.y}
+            stroke={COLORS.teal} strokeWidth={0.5} strokeOpacity={0.2} />
+        ))}
+        <line x1={280} y1={220} x2={480} y2={330} stroke={COLORS.border} strokeWidth={0.5} strokeDasharray="6 6" />
+        <line x1={480} y1={330} x2={380} y2={420} stroke={COLORS.border} strokeWidth={0.5} strokeDasharray="6 6" />
+        <line x1={280} y1={220} x2={640} y2={180} stroke={COLORS.border} strokeWidth={0.5} strokeDasharray="6 6" />
+        {nuclei.map(n => (
+          <NucleusRing key={n.id} nucleus={n}
+            isSelected={selectedNucleus?.id === n.id}
+            onClick={() => onSelectNucleus(n)} />
+        ))}
+        {filteredPeople.map(p => (
+          <GraphNode key={p.id} person={p} pos={NODE_POSITIONS[p.id - 1]}
+            isSelected={selectedPerson?.id === p.id}
+            onClick={() => onSelectPerson(p)} />
+        ))}
+      </svg>
+
+      {/* Fixed legend — stays in place while panning/zooming */}
+      <div style={{
+        position: "absolute", bottom: 16, left: 16, pointerEvents: "none",
+        background: "rgba(8,18,38,0.82)", backdropFilter: "blur(12px)",
+        border: `1px solid ${COLORS.border}`, borderRadius: 12,
+        padding: "10px 14px", display: "flex", flexDirection: "column", gap: 8,
+      }}>
+        {LEGEND_ITEMS.map(([key, color, label]) => (
+          <div key={key} style={{ display: "flex", alignItems: "center", gap: 9 }}>
+            <svg width={14} height={14} style={{ flexShrink: 0 }}>
+              <circle cx={7} cy={7} r={6} fill={color} fillOpacity={0.88} />
+              <circle cx={7} cy={4.5} r={1.8} fill="rgba(255,255,255,0.85)" />
+              <ellipse cx={7} cy={10.5} rx={3.2} ry={2.4} fill="rgba(255,255,255,0.72)" />
+            </svg>
+            <span style={{ fontSize: 11, color: COLORS.textMuted, fontFamily: "system-ui", whiteSpace: "nowrap" }}>
+              {label}
+            </span>
+          </div>
+        ))}
+      </div>
+    </div>
   );
 }
 
