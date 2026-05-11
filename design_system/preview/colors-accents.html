@@ -1,0 +1,48 @@
+<!doctype html>
+<html><head><meta charset="utf-8"><link rel="stylesheet" href="../colors_and_type.css">
+<style>
+  body { margin: 0; padding: 20px; background: var(--cream-100); }
+  .grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; }
+  .group { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+  .swatch { display: flex; flex-direction: column; gap: 4px; }
+  .chip { display: block; height: 50px; border-radius: 8px; border: 1px solid var(--border); }
+  .name { font-size: 10px; font-weight: 600; color: var(--fg); letter-spacing: 0.04em; text-transform: uppercase; font-family: var(--font-sans); }
+  .hex { font-family: var(--font-mono); font-size: 10px; color: var(--fg-muted); }
+  .label { font-family: var(--font-sans); font-size: 11px; font-weight: 600; color: var(--fg-muted); text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 8px; display: block; }
+</style></head>
+<body>
+  <div class="grid">
+    <div>
+      <span class="label">Gold</span>
+      <div class="group">
+        <div class="swatch"><span class="chip" style="background:var(--gold-100)"></span><span class="name">100</span><span class="hex">#F6E8C2</span></div>
+        <div class="swatch"><span class="chip" style="background:var(--gold-300)"></span><span class="name">300</span><span class="hex">#EAC267</span></div>
+        <div class="swatch"><span class="chip" style="background:var(--gold-500)"></span><span class="name">500</span><span class="hex">#E5A93B</span></div>
+      </div>
+    </div>
+    <div>
+      <span class="label">Green</span>
+      <div class="group">
+        <div class="swatch"><span class="chip" style="background:var(--green-100)"></span><span class="name">100</span><span class="hex">#CDEBD8</span></div>
+        <div class="swatch"><span class="chip" style="background:var(--green-300)"></span><span class="name">300</span><span class="hex">#9BE3B8</span></div>
+        <div class="swatch"><span class="chip" style="background:var(--green-500)"></span><span class="name">500</span><span class="hex">#4FB07A</span></div>
+      </div>
+    </div>
+    <div>
+      <span class="label">Cream</span>
+      <div class="group">
+        <div class="swatch"><span class="chip" style="background:var(--cream-50)"></span><span class="name">50</span><span class="hex">#FBF8F2</span></div>
+        <div class="swatch"><span class="chip" style="background:var(--cream-100)"></span><span class="name">100</span><span class="hex">#F6F1E6</span></div>
+        <div class="swatch"><span class="chip" style="background:var(--cream-200)"></span><span class="name">200</span><span class="hex">#ECE3CE</span></div>
+      </div>
+    </div>
+    <div>
+      <span class="label">Terracotta</span>
+      <div class="group">
+        <div class="swatch"><span class="chip" style="background:var(--terracotta-300)"></span><span class="name">300</span><span class="hex">#E2B0A0</span></div>
+        <div class="swatch"><span class="chip" style="background:var(--terracotta-500)"></span><span class="name">500</span><span class="hex">#C26A52</span></div>
+        <div class="swatch"><span class="chip" style="background:var(--terracotta-700)"></span><span class="name">700</span><span class="hex">#8E4936</span></div>
+      </div>
+    </div>
+  </div>
+</body></html>

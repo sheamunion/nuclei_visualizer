@@ -1,0 +1,28 @@
+<!doctype html>
+<html><head><meta charset="utf-8"><link rel="stylesheet" href="../colors_and_type.css">
+<style>
+  body { margin: 0; padding: 28px 24px; background: var(--cream-100); }
+  .row { display: flex; gap: 14px; align-items: center; flex-wrap: wrap; }
+  .row + .row { margin-top: 16px; }
+  .label { font-family: var(--font-sans); font-size: 11px; font-weight: 600; color: var(--fg-muted); text-transform: uppercase; letter-spacing: 0.08em; width: 84px; flex-shrink: 0; }
+</style></head>
+<body>
+  <div class="row">
+    <span class="label">Primary</span>
+    <button class="btn btn-primary">Log in</button>
+    <button class="btn btn-primary">+ Add new person</button>
+    <button class="btn btn-primary" style="background: var(--green-400)">Hover</button>
+    <button class="btn btn-primary" disabled style="opacity: 0.5; cursor: not-allowed">Disabled</button>
+  </div>
+  <div class="row">
+    <span class="label">Secondary</span>
+    <button class="btn btn-secondary">Cancel</button>
+    <button class="btn btn-secondary">View report</button>
+    <button class="btn btn-secondary" style="background: var(--neutral-100)">Hover</button>
+  </div>
+  <div class="row">
+    <span class="label">Ghost</span>
+    <button class="btn btn-ghost">Skip for now</button>
+    <button class="btn btn-ghost">Learn more →</button>
+  </div>
+</body></html>

@@ -1,0 +1,36 @@
+<!doctype html>
+<html><head><meta charset="utf-8"><link rel="stylesheet" href="../colors_and_type.css">
+<style>
+  body { margin: 0; padding: 24px; background: var(--cream-100); }
+  .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px 24px; align-items: end; }
+  .field { display: flex; flex-direction: column; gap: 6px; }
+  label { font-family: var(--font-sans); font-size: 12px; font-weight: 600; color: var(--fg); }
+  .hint { font-family: var(--font-sans); font-size: 11px; color: var(--fg-muted); }
+  .err { font-family: var(--font-sans); font-size: 11px; color: var(--terracotta-500); }
+  .focused { border-color: var(--green-500) !important; box-shadow: 0 0 0 3px rgba(79,176,122,0.15); }
+  .errored { border-color: var(--terracotta-500) !important; }
+</style></head>
+<body>
+  <div class="grid">
+    <div class="field">
+      <label>Email</label>
+      <input class="input" placeholder="friend@example.org">
+      <span class="hint">We'll never share this address.</span>
+    </div>
+    <div class="field">
+      <label>Password</label>
+      <input class="input focused" type="password" value="••••••••">
+      <span class="hint">Focused state</span>
+    </div>
+    <div class="field">
+      <label>Nucleus name</label>
+      <input class="input" value="Lakeshore Nucleus">
+      <span class="hint">Filled · resting</span>
+    </div>
+    <div class="field">
+      <label>Phone</label>
+      <input class="input errored" value="555-0">
+      <span class="err">Please enter a complete phone number.</span>
+    </div>
+  </div>
+</body></html>

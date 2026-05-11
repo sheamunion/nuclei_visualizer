@@ -1,0 +1,40 @@
+<!doctype html>
+<html><head><meta charset="utf-8"><link rel="stylesheet" href="../colors_and_type.css">
+<style>
+  body { margin: 0; padding: 28px; background: var(--indigo-950); }
+  .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; align-items: start; }
+  .panel { padding: 18px; }
+  .head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
+  h3.title { font-family: var(--font-display); font-size: 18px; color: var(--map-fg); font-weight: 500; margin: 0; }
+  .row { display: flex; justify-content: space-between; align-items: center; padding: 8px 0; }
+  .row + .row { border-top: 1px solid var(--map-border); }
+  .name { font-family: var(--font-sans); font-size: 13px; color: var(--map-fg-muted); }
+  /* fake toggle */
+  .toggle { width: 32px; height: 18px; border-radius: 999px; background: var(--green-500); position: relative; }
+  .toggle::after { content: ""; position: absolute; top: 2px; right: 2px; width: 14px; height: 14px; border-radius: 50%; background: white; }
+  .toggle.off { background: rgba(255,255,255,0.18); }
+  .toggle.off::after { right: auto; left: 2px; }
+  .select { display: flex; justify-content: space-between; align-items: center; padding: 8px 10px; background: rgba(255,255,255,0.06); border: 1px solid var(--map-border); border-radius: 8px; font-family: var(--font-sans); font-size: 13px; color: var(--map-fg); }
+  .select span.chev { color: var(--map-fg-muted); }
+</style></head>
+<body>
+  <div class="grid">
+    <div class="card-glass panel">
+      <div class="head"><h3 class="title">Filters &amp; controls</h3></div>
+      <div class="row"><span class="name">Show nuclei boundary</span><span class="toggle"></span></div>
+      <div class="row"><span class="name">Show paths</span><span class="toggle"></span></div>
+      <div class="row"><span class="name">Show labels</span><span class="toggle off"></span></div>
+      <div class="row" style="display: block; padding-top: 12px;">
+        <span class="name" style="display: block; margin-bottom: 6px">Activity filter</span>
+        <div class="select"><span>All activities</span><span class="chev">▾</span></div>
+      </div>
+    </div>
+    <div class="card-glass panel">
+      <div class="head"><h3 class="title">Lakeshore nucleus</h3></div>
+      <p style="font-family: var(--font-sans); font-size: 13px; color: var(--map-fg-muted); margin: 0 0 12px;">A small constellation of 12 friends accompanying one another in the path of service.</p>
+      <div class="row"><span class="name">Sustaining</span><span style="font-family: var(--font-sans); font-size: 13px; color: var(--gold-500); font-weight: 600">3 friends</span></div>
+      <div class="row"><span class="name">Engaged</span><span style="font-family: var(--font-sans); font-size: 13px; color: var(--green-300); font-weight: 600">8 friends</span></div>
+      <div class="row"><span class="name">Invited</span><span style="font-family: var(--font-sans); font-size: 13px; color: var(--map-fg-muted); font-weight: 600">1 friend</span></div>
+    </div>
+  </div>
+</body></html>

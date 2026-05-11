@@ -1,0 +1,21 @@
+<!doctype html>
+<html><head><meta charset="utf-8"><link rel="stylesheet" href="../colors_and_type.css">
+<style>
+  body { margin: 0; padding: 24px; background: var(--cream-100); }
+  .stack { display: flex; flex-direction: column; gap: 12px; }
+  .row { display: flex; align-items: center; gap: 14px; }
+  .meta { font-family: var(--font-mono); font-size: 11px; color: var(--fg-muted); width: 220px; flex-shrink: 0; }
+  .swatch { height: 18px; width: 220px; border-radius: 999px; }
+  /* visualize the easing as a curve preview-ish */
+  .preview { width: 60px; height: 18px; background: var(--green-500); border-radius: 9px; }
+  .ambient .preview { animation: pulse-glow 2.4s ease-in-out infinite; }
+</style></head>
+<body>
+  <div class="stack">
+    <div class="row"><span class="meta">--duration-fast · 180ms</span><span class="swatch" style="background: linear-gradient(90deg, var(--cream-200), var(--green-500))"></span><span class="meta">hover, press, focus</span></div>
+    <div class="row"><span class="meta">--duration-base · 260ms</span><span class="swatch" style="background: linear-gradient(90deg, var(--cream-200), var(--green-500))"></span><span class="meta">panel slide, dropdown</span></div>
+    <div class="row"><span class="meta">--duration-slow · 480ms</span><span class="swatch" style="background: linear-gradient(90deg, var(--cream-200), var(--green-500))"></span><span class="meta">map zoom / pan</span></div>
+    <div class="row ambient"><span class="meta">--duration-ambient · 2400ms</span><span class="preview pulse"></span><span class="meta">node pulse · infinite</span></div>
+    <div class="row"><span class="meta">--ease-out</span><span class="mono" style="font-size: 11px; color: var(--fg-muted)">cubic-bezier(0.22, 1, 0.36, 1)</span></div>
+  </div>
+</body></html>

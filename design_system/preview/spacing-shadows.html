@@ -1,0 +1,29 @@
+<!doctype html>
+<html><head><meta charset="utf-8"><link rel="stylesheet" href="../colors_and_type.css">
+<style>
+  body { margin: 0; padding: 36px 24px; background: var(--cream-100); }
+  .grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px; }
+  .cell { display: flex; flex-direction: column; align-items: center; gap: 14px; }
+  .box { width: 96px; height: 72px; background: var(--cream-50); border-radius: 12px; border: 1px solid var(--border); }
+  .name { font-family: var(--font-sans); font-size: 12px; font-weight: 600; color: var(--fg); letter-spacing: 0.04em; text-transform: uppercase; }
+  .meta { font-family: var(--font-mono); font-size: 10px; color: var(--fg-muted); text-align: center; }
+</style></head>
+<body>
+  <div class="grid">
+    <div class="cell">
+      <span class="box" style="box-shadow: var(--shadow-sm)"></span>
+      <span class="name">Shadow / sm</span>
+      <span class="meta">Resting state · cards, tags</span>
+    </div>
+    <div class="cell">
+      <span class="box" style="box-shadow: var(--shadow-md)"></span>
+      <span class="name">Shadow / md</span>
+      <span class="meta">Hover · dropdowns · popovers</span>
+    </div>
+    <div class="cell">
+      <span class="box" style="box-shadow: var(--shadow-lg)"></span>
+      <span class="name">Shadow / lg</span>
+      <span class="meta">Modals · login card</span>
+    </div>
+  </div>
+</body></html>

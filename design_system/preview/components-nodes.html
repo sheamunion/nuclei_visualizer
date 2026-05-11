@@ -1,0 +1,19 @@
+<!doctype html>
+<html><head><meta charset="utf-8"><link rel="stylesheet" href="../colors_and_type.css">
+<style>
+  body { margin: 0; padding: 28px; background: var(--indigo-950); display: grid; grid-template-columns: repeat(4, 1fr); gap: 28px; place-items: center; }
+  .cell { display: flex; flex-direction: column; align-items: center; gap: 10px; }
+  .node { width: 56px; height: 56px; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; font-family: var(--font-sans); font-size: 18px; font-weight: 600; }
+  .name { font-family: var(--font-sans); font-size: 11px; color: var(--map-fg); text-transform: uppercase; letter-spacing: 0.06em; font-weight: 600; }
+  .meta { font-family: var(--font-mono); font-size: 10px; color: var(--map-fg-muted); text-align: center; }
+  .engaged    { background: var(--green-500); box-shadow: var(--glow-green-sm); }
+  .sustaining { background: var(--gold-500); box-shadow: var(--glow-gold-sm); color: var(--indigo-900); }
+  .invited    { background: var(--cream-100); color: var(--indigo-800); border: 1px solid rgba(255,255,255,0.2); }
+  .not-invited{ background: rgba(246,241,230,0.25); color: var(--map-fg-muted); }
+</style></head>
+<body>
+  <div class="cell"><span class="node engaged">A</span><span class="name">Engaged</span><span class="meta">In a core activity</span></div>
+  <div class="cell"><span class="node sustaining">N</span><span class="name">Sustaining</span><span class="meta">Sustains an activity</span></div>
+  <div class="cell"><span class="node invited">R</span><span class="name">Invited</span><span class="meta">Yet to engage</span></div>
+  <div class="cell"><span class="node not-invited">?</span><span class="name">Not invited</span><span class="meta">Known to community</span></div>
+</body></html>

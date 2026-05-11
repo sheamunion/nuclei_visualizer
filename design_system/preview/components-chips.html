@@ -1,0 +1,35 @@
+<!doctype html>
+<html><head><meta charset="utf-8"><link rel="stylesheet" href="../colors_and_type.css">
+<style>
+  body { margin: 0; padding: 24px; background: var(--cream-100); }
+  .row { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; }
+  .row + .row { margin-top: 14px; }
+  .label { font-family: var(--font-sans); font-size: 11px; font-weight: 600; color: var(--fg-muted); text-transform: uppercase; letter-spacing: 0.08em; width: 96px; flex-shrink: 0; }
+  .chip-status { display: inline-flex; align-items: center; gap: 6px; height: 22px; padding: 0 8px; border-radius: 999px; font-family: var(--font-sans); font-size: 11px; font-weight: 600; letter-spacing: 0.04em; }
+  .chip-status .dot { width: 6px; height: 6px; border-radius: 50%; }
+  .s-engaged    { background: rgba(79,176,122,0.14); color: var(--green-700); }
+  .s-engaged .dot { background: var(--green-500); }
+  .s-sustaining { background: rgba(229,169,59,0.16); color: var(--gold-700); }
+  .s-sustaining .dot { background: var(--gold-500); }
+  .s-invited    { background: var(--neutral-100); color: var(--fg-muted); }
+  .s-invited .dot { background: var(--neutral-400); }
+  .s-not-invited{ background: var(--neutral-100); color: var(--fg-subtle); }
+  .s-not-invited .dot { background: var(--neutral-300); }
+</style></head>
+<body>
+  <div class="row">
+    <span class="label">Status</span>
+    <span class="chip-status s-engaged"><span class="dot"></span>Engaged</span>
+    <span class="chip-status s-sustaining"><span class="dot"></span>Sustaining</span>
+    <span class="chip-status s-invited"><span class="dot"></span>Invited</span>
+    <span class="chip-status s-not-invited"><span class="dot"></span>Not yet invited</span>
+  </div>
+  <div class="row">
+    <span class="label">Activity</span>
+    <span class="chip">Study circle</span>
+    <span class="chip">Children's class</span>
+    <span class="chip">Junior youth</span>
+    <span class="chip">Devotional</span>
+    <span class="chip">Home visit</span>
+  </div>
+</body></html>

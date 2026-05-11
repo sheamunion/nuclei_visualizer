@@ -1,0 +1,56 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<title>Nucleus Visualizer — UI kit</title>
+<link rel="stylesheet" href="../../colors_and_type.css" />
+<style>
+  html, body, #root { margin: 0; height: 100%; }
+  body { background: var(--cream-100); }
+  .screen-host { position: fixed; inset: 0; }
+  .nav { position: fixed; top: 14px; right: 14px; z-index: 1000; display: inline-flex; gap: 4px; padding: 4px; background: rgba(20,38,68,0.7); backdrop-filter: blur(12px); border: 1px solid rgba(255,255,255,0.1); border-radius: 999px; }
+  .nav button { background: transparent; border: none; color: rgba(246,241,230,0.7); padding: 6px 14px; font-family: var(--font-sans); font-size: 12px; font-weight: 600; letter-spacing: 0.04em; text-transform: uppercase; border-radius: 999px; cursor: pointer; }
+  .nav button.active { background: var(--gold-500); color: var(--indigo-900); }
+</style>
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+</head>
+<body>
+  <div id="root"></div>
+
+  <script type="text/babel" src="Logo.jsx"></script>
+  <script type="text/babel" src="Button.jsx"></script>
+  <script type="text/babel" src="TextField.jsx"></script>
+  <script type="text/babel" src="Chips.jsx"></script>
+  <script type="text/babel" src="GrowthMap.jsx"></script>
+  <script type="text/babel" src="MapChrome.jsx"></script>
+  <script type="text/babel" src="Screens.jsx"></script>
+
+  <script type="text/babel">
+    const App = () => {
+      const [screen, setScreen] = React.useState("login");
+      const screens = [
+        { id: "login",     label: "Login" },
+        { id: "dashboard", label: "Dashboard" },
+        { id: "map",       label: "Map" },
+      ];
+
+      return (
+        <div data-screen-label={`UI Kit — ${screen}`} className="screen-host">
+          <div className="nav" role="tablist">
+            {screens.map(s => (
+              <button key={s.id} className={s.id === screen ? "active" : ""} onClick={() => setScreen(s.id)}>{s.label}</button>
+            ))}
+          </div>
+          {screen === "login"     ? <LoginScreen onLogin={() => setScreen("dashboard")} />     : null}
+          {screen === "dashboard" ? <DashboardScreen onOpenMap={() => setScreen("map")} />     : null}
+          {screen === "map"       ? <MapScreen />                                              : null}
+        </div>
+      );
+    };
+
+    ReactDOM.createRoot(document.getElementById("root")).render(<App />);
+  </script>
+</body>
+</html>

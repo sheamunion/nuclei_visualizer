@@ -1,24 +1,24 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 
 const COLORS = {
-  deepBlue: "#0a1628",
-  midBlue: "#0d2240",
-  blue1: "#1a3a5c",
-  blue2: "#1e5799",
-  teal: "#1a9e7a",
-  tealLight: "#2dc9a1",
-  gold: "#c8932a",
-  goldLight: "#f0b942",
-  goldPale: "#fce8b2",
-  green: "#2a7a4e",
-  greenLight: "#4caf80",
-  text: "#e8edf5",
-  textMuted: "#7a9ab8",
-  textDim: "#3a5a78",
-  surface: "rgba(10,25,50,0.7)",
-  surfaceAlt: "rgba(15,35,65,0.85)",
-  border: "rgba(100,160,220,0.15)",
-  borderGold: "rgba(200,147,42,0.3)",
+  deepBlue: "#0A1A35",                     // indigo-950
+  midBlue: "#0E2444",                      // indigo-900
+  blue1: "#1F3A5F",                        // indigo-700
+  blue2: "#2A436A",                        // indigo-600
+  teal: "#1a9e7a",                         // semantic: accompanying path
+  tealLight: "#2dc9a1",                    // semantic: accompanying light
+  gold: "#C28C24",                         // gold-600 (deeper gold)
+  goldLight: "#E5A93B",                    // gold-500 — path of service
+  goldPale: "#F6E8C2",                     // gold-100
+  green: "#3D9963",                        // green-600
+  greenLight: "#4FB07A",                   // green-500 — primary action
+  text: "#F6F1E6",                         // cream-50 / map-fg
+  textMuted: "#9FA4AA",                    // warm neutral (cream-50 at ~60% on dark)
+  textDim: "rgba(246,241,230,0.40)",       // map-fg-subtle
+  surface: "rgba(20,38,68,0.55)",          // map-panel-bg
+  surfaceAlt: "rgba(14,36,68,0.88)",       // indigo-900 at 88%
+  border: "rgba(255,255,255,0.08)",        // map-border
+  borderGold: "rgba(229,169,59,0.30)",     // gold-500 border
 };
 
 const MOCK_PEOPLE = [
@@ -129,7 +129,7 @@ function AuthScreen({ onLogin }) {
   return (
     <div style={{
       minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center",
-      background: `radial-gradient(ellipse at 50% 30%, ${COLORS.blue1} 0%, ${COLORS.midBlue} 40%, ${COLORS.deepBlue} 100%)`,
+      background: `radial-gradient(ellipse at 50% 30%, ${COLORS.blue1} 0%, ${COLORS.midBlue} 45%, ${COLORS.deepBlue} 100%)`,
       padding: 24, position: "relative", overflow: "hidden"
     }}>
       <StarField />
@@ -157,12 +157,12 @@ function AuthScreen({ onLogin }) {
           </div>
         </div>
 
-        <h1 style={{ fontFamily: "'Crimson Pro', Georgia, serif", fontSize: 28, fontWeight: 400,
-          color: COLORS.text, textAlign: "center", margin: "0 0 6px", letterSpacing: "0.02em" }}>
-          Community Visualizer
+        <h1 style={{ fontFamily: "'Cormorant Garamond', Georgia, serif", fontSize: 32, fontWeight: 500,
+          color: COLORS.text, textAlign: "center", margin: "0 0 6px", letterSpacing: "-0.01em", lineHeight: 1.2 }}>
+          Nucleus Visualizer
         </h1>
         <p style={{ color: COLORS.textMuted, textAlign: "center", fontSize: 14, margin: "0 0 36px",
-          fontStyle: "italic" }}>Northern Illinois Subregion</p>
+          fontFamily: "'Manrope', system-ui, sans-serif" }}>Northern Illinois Subregion</p>
 
         <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
           <div>
@@ -171,9 +171,10 @@ function AuthScreen({ onLogin }) {
             <input value={email} onChange={e => setEmail(e.target.value)}
               onKeyDown={e => e.key === "Enter" && handleSubmit()}
               style={{
-                width: "100%", background: "rgba(255,255,255,0.04)", border: `1px solid ${COLORS.border}`,
-                borderRadius: 10, padding: "12px 16px", color: COLORS.text, fontSize: 15,
-                outline: "none", boxSizing: "border-box", transition: "border-color 0.2s",
+                width: "100%", background: "rgba(255,255,255,0.06)", border: `1px solid ${COLORS.border}`,
+                borderRadius: 8, padding: "12px 16px", color: COLORS.text, fontSize: 15,
+                outline: "none", boxSizing: "border-box", transition: "border-color 180ms cubic-bezier(0.22,1,0.36,1)",
+                boxShadow: "inset 0 1px 0 rgba(255,255,255,0.04)",
               }} placeholder="your@email.com" />
           </div>
           <div>
@@ -182,9 +183,10 @@ function AuthScreen({ onLogin }) {
             <input type="password" value={password} onChange={e => setPassword(e.target.value)}
               onKeyDown={e => e.key === "Enter" && handleSubmit()}
               style={{
-                width: "100%", background: "rgba(255,255,255,0.04)", border: `1px solid ${COLORS.border}`,
-                borderRadius: 10, padding: "12px 16px", color: COLORS.text, fontSize: 15,
+                width: "100%", background: "rgba(255,255,255,0.06)", border: `1px solid ${COLORS.border}`,
+                borderRadius: 8, padding: "12px 16px", color: COLORS.text, fontSize: 15,
                 outline: "none", boxSizing: "border-box",
+                boxShadow: "inset 0 1px 0 rgba(255,255,255,0.04)",
               }} placeholder="••••••••" />
           </div>
           <button onClick={handleSubmit}
@@ -192,18 +194,22 @@ function AuthScreen({ onLogin }) {
             disabled={loading}
             style={{
               marginTop: 8, padding: "14px", borderRadius: 12,
-              background: hovered ? `linear-gradient(135deg, ${COLORS.teal}, ${COLORS.blue2})` : `linear-gradient(135deg, ${COLORS.blue2}, ${COLORS.teal})`,
-              border: "none", color: "#fff", fontSize: 15, fontWeight: 500, cursor: "pointer",
-              transition: "all 0.3s", letterSpacing: "0.03em",
-              boxShadow: hovered ? `0 8px 30px rgba(26,158,122,0.4)` : `0 4px 16px rgba(26,158,122,0.2)`,
+              background: hovered ? "#6BC18F" : COLORS.greenLight,
+              border: "none", color: "#fff", fontSize: 15, fontWeight: 600, cursor: "pointer",
+              transition: "background 180ms cubic-bezier(0.22,1,0.36,1), box-shadow 180ms cubic-bezier(0.22,1,0.36,1)",
+              letterSpacing: "0.01em",
+              boxShadow: hovered
+                ? `0 0 8px rgba(155,227,184,0.95), 0 0 20px rgba(155,227,184,0.70), 0 0 44px rgba(79,176,122,0.50)`
+                : `0 0 6px rgba(155,227,184,0.85), 0 0 14px rgba(155,227,184,0.55), 0 0 28px rgba(79,176,122,0.35)`,
               opacity: loading ? 0.7 : 1,
             }}>
-            {loading ? "Entering…" : "Enter the Space"}
+            {loading ? "Signing in…" : "Sign in"}
           </button>
         </div>
 
-        <p style={{ marginTop: 24, textAlign: "center", fontSize: 13, color: COLORS.textDim }}>
-          A space for friends walking a path of service
+        <p style={{ marginTop: 24, textAlign: "center", fontSize: 13, color: COLORS.textMuted,
+          fontFamily: "'Manrope', system-ui, sans-serif" }}>
+          Welcome back. The community is waiting.
         </p>
       </div>
     </div>
@@ -246,7 +252,7 @@ function GraphNode({ person, pos, isSelected, onClick, viewScale }) {
       {/* Name label — always when selected, or when zoomed in enough */}
       {(isSelected || showLabel) && (
         <text x={pos.x} y={pos.y - size - 5} textAnchor="middle" fill="#fff" fontSize={9}
-          fontFamily="system-ui" style={{ filter: "drop-shadow(0 1px 4px rgba(0,0,0,0.95))", pointerEvents: "none" }}>
+          fontFamily="'Manrope', system-ui" style={{ filter: "drop-shadow(0 1px 4px rgba(0,0,0,0.95))", pointerEvents: "none" }}>
           {person.name.split(" ")[0]}
         </text>
       )}
@@ -306,7 +312,7 @@ function NucleusRing({ nucleus, isSelected, onClick }) {
         filter="url(#nodeGlow)" onClick={onClick} />
 
       <text x={nucleus.x} y={nucleus.y + 90} textAnchor="middle" fill={COLORS.textMuted}
-        fontSize={10} fontFamily="system-ui">{nucleus.name}</text>
+        fontSize={10} fontFamily="'Manrope', system-ui">{nucleus.name}</text>
     </g>
   );
 }
@@ -693,7 +699,7 @@ function PersonPanel({ person, onClose }) {
             {person.name.split(" ").map(n => n[0]).join("")}
           </div>
           <div>
-            <div style={{ color: COLORS.text, fontWeight: 600, fontSize: 17 }}>{person.name}</div>
+            <div style={{ color: COLORS.text, fontWeight: 500, fontSize: 20, fontFamily: "'Cormorant Garamond', Georgia, serif", letterSpacing: "-0.01em" }}>{person.name}</div>
             <div style={{ color: COLORS.textMuted, fontSize: 13 }}>{person.nucleus} · {person.cluster}</div>
           </div>
         </div>
@@ -775,7 +781,7 @@ function NucleusPanel({ nucleus, people, onClose }) {
     }}>
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 20 }}>
         <div>
-          <div style={{ color: COLORS.text, fontWeight: 600, fontSize: 18 }}>{nucleus.name}</div>
+          <div style={{ color: COLORS.text, fontWeight: 500, fontSize: 22, fontFamily: "'Cormorant Garamond', Georgia, serif", letterSpacing: "-0.01em" }}>{nucleus.name}</div>
           <div style={{ color: COLORS.textMuted, fontSize: 13 }}>{nucleus.cluster}</div>
         </div>
         <button onClick={onClose} style={{
@@ -809,8 +815,8 @@ function NucleusPanel({ nucleus, people, onClose }) {
             background: `rgba(255,255,255,0.03)`, border: `1px solid ${COLORS.border}`,
             borderRadius: 12, padding: "10px 12px", textAlign: "center",
           }}>
-            <div style={{ fontSize: 18, fontWeight: 600, color }}>{value}</div>
-            <div style={{ fontSize: 11, color: COLORS.textDim, marginTop: 2 }}>{label}</div>
+            <div style={{ fontSize: 22, fontWeight: 500, color, fontFamily: "'Cormorant Garamond', Georgia, serif", letterSpacing: "-0.01em" }}>{value}</div>
+            <div style={{ fontSize: 11, color: COLORS.textMuted, marginTop: 2 }}>{label}</div>
           </div>
         ))}
       </div>
@@ -847,7 +853,7 @@ function NucleusPanel({ nucleus, people, onClose }) {
       {/* People in nucleus */}
       <div>
         <div style={{ fontSize: 11, color: COLORS.textMuted, textTransform: "uppercase",
-          letterSpacing: "0.08em", marginBottom: 8 }}>Participants ({nucleusPeople.length})</div>
+          letterSpacing: "0.08em", marginBottom: 8 }}>Friends ({nucleusPeople.length})</div>
         <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
           {nucleusPeople.map(p => (
             <div key={p.id} style={{
@@ -884,7 +890,7 @@ function DashboardStats({ people }) {
           background: COLORS.surfaceAlt, border: `1px solid ${COLORS.border}`,
           borderRadius: 16, padding: "16px 18px", backdropFilter: "blur(12px)",
         }}>
-          <div style={{ fontSize: 28, fontWeight: 700, color: s.color, fontVariantNumeric: "tabular-nums" }}>{s.value}</div>
+          <div style={{ fontSize: 32, fontWeight: 500, color: s.color, fontFamily: "'Cormorant Garamond', Georgia, serif", lineHeight: 1.1, letterSpacing: "-0.01em" }}>{s.value}</div>
           <div style={{ fontSize: 12, color: COLORS.textMuted, marginTop: 4 }}>{s.label}</div>
         </div>
       ))}
@@ -899,38 +905,39 @@ function FilterBar({ filters, setFilters }) {
   return (
     <div style={{ display: "flex", gap: 10, alignItems: "center", flexWrap: "wrap", marginBottom: 16 }}>
       <input
-        placeholder="🔍  Search people…"
+        placeholder="Search friends…"
         value={filters.search}
         onChange={e => setFilters(f => ({ ...f, search: e.target.value }))}
         style={{
           background: COLORS.surfaceAlt, border: `1px solid ${COLORS.border}`,
-          borderRadius: 10, padding: "8px 14px", color: COLORS.text, fontSize: 14,
+          borderRadius: 8, padding: "8px 14px", color: COLORS.text, fontSize: 14,
           outline: "none", minWidth: 200, backdropFilter: "blur(12px)",
+          boxShadow: "inset 0 1px 0 rgba(255,255,255,0.04)",
         }}
       />
       <select value={filters.cluster} onChange={e => setFilters(f => ({ ...f, cluster: e.target.value }))}
         style={{
           background: COLORS.surfaceAlt, border: `1px solid ${COLORS.border}`,
-          borderRadius: 10, padding: "8px 14px", color: filters.cluster ? COLORS.text : COLORS.textMuted,
+          borderRadius: 8, padding: "8px 14px", color: filters.cluster ? COLORS.text : COLORS.textMuted,
           fontSize: 14, outline: "none", backdropFilter: "blur(12px)",
         }}>
-        <option value="">All Clusters</option>
+        <option value="">All clusters</option>
         {clusters.map(c => <option key={c} value={c}>{c}</option>)}
       </select>
       <select value={filters.path} onChange={e => setFilters(f => ({ ...f, path: e.target.value }))}
         style={{
           background: COLORS.surfaceAlt, border: `1px solid ${COLORS.border}`,
-          borderRadius: 10, padding: "8px 14px", color: filters.path ? COLORS.text : COLORS.textMuted,
+          borderRadius: 8, padding: "8px 14px", color: filters.path ? COLORS.text : COLORS.textMuted,
           fontSize: 14, outline: "none", backdropFilter: "blur(12px)",
         }}>
-        <option value="">All Paths</option>
+        <option value="">All paths</option>
         {paths.map(p => <option key={p} value={p}>{p}</option>)}
       </select>
       {(filters.search || filters.cluster || filters.path) && (
         <button onClick={() => setFilters({ search: "", cluster: "", path: "" })}
           style={{
             background: "none", border: `1px solid ${COLORS.border}`,
-            borderRadius: 10, padding: "8px 14px", color: COLORS.textMuted,
+            borderRadius: 8, padding: "8px 14px", color: COLORS.textMuted,
             fontSize: 13, cursor: "pointer",
           }}>Clear</button>
       )}
@@ -1019,7 +1026,8 @@ function AddPersonModal({ onClose, onAdd }) {
         animation: "slideIn 0.2s ease-out",
       }}>
         <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 24 }}>
-          <h3 style={{ color: COLORS.text, margin: 0, fontSize: 18, fontWeight: 500 }}>Add a Friend</h3>
+          <h3 style={{ color: COLORS.text, margin: 0, fontSize: 22, fontWeight: 500,
+            fontFamily: "'Cormorant Garamond', Georgia, serif", letterSpacing: "-0.01em" }}>Add a friend</h3>
           <button onClick={onClose} style={{ background: "none", border: "none", color: COLORS.textMuted, fontSize: 22, cursor: "pointer" }}>×</button>
         </div>
         <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
@@ -1031,14 +1039,15 @@ function AddPersonModal({ onClose, onAdd }) {
         </div>
         <div style={{ display: "flex", gap: 10, marginTop: 24 }}>
           <button onClick={onClose} style={{
-            flex: 1, padding: "11px", borderRadius: 12, background: "none",
+            flex: 1, padding: "11px", borderRadius: 8, background: "none",
             border: `1px solid ${COLORS.border}`, color: COLORS.textMuted, cursor: "pointer", fontSize: 14,
           }}>Cancel</button>
           <button onClick={handleAdd} style={{
-            flex: 1, padding: "11px", borderRadius: 12,
-            background: `linear-gradient(135deg, ${COLORS.teal}, ${COLORS.blue2})`,
-            border: "none", color: "#fff", cursor: "pointer", fontSize: 14, fontWeight: 500,
-          }}>Add Friend</button>
+            flex: 1, padding: "11px", borderRadius: 8,
+            background: COLORS.greenLight,
+            border: "none", color: "#fff", cursor: "pointer", fontSize: 14, fontWeight: 600,
+            transition: "background 180ms cubic-bezier(0.22,1,0.36,1)",
+          }}>Add friend</button>
         </div>
       </div>
     </div>
@@ -1049,10 +1058,11 @@ function NavItem({ label, icon, active, onClick }) {
   return (
     <button onClick={onClick} style={{
       display: "flex", flexDirection: "column", alignItems: "center", gap: 4,
-      padding: "8px 16px", background: active ? `${COLORS.teal}22` : "none",
-      border: `1px solid ${active ? COLORS.teal + "44" : "transparent"}`,
-      borderRadius: 12, cursor: "pointer", color: active ? COLORS.tealLight : COLORS.textMuted,
-      fontSize: 12, transition: "all 0.2s", minWidth: 64,
+      padding: "8px 16px", background: active ? `rgba(229,169,59,0.12)` : "none",
+      border: `1px solid ${active ? "rgba(229,169,59,0.35)" : "transparent"}`,
+      borderRadius: 12, cursor: "pointer", color: active ? COLORS.goldLight : COLORS.textMuted,
+      fontSize: 12, fontFamily: "'Manrope', system-ui, sans-serif",
+      transition: "all 180ms cubic-bezier(0.22,1,0.36,1)", minWidth: 64,
     }}>
       <span style={{ fontSize: 18 }}>{icon}</span>
       <span>{label}</span>
@@ -1084,16 +1094,19 @@ export default function App() {
   return (
     <div style={{
       minHeight: "100vh", background: `radial-gradient(ellipse at 40% 20%, ${COLORS.blue1} 0%, ${COLORS.midBlue} 50%, ${COLORS.deepBlue} 100%)`,
-      fontFamily: "system-ui, -apple-system, sans-serif", color: COLORS.text,
+      fontFamily: "'Manrope', system-ui, -apple-system, sans-serif", color: COLORS.text,
       display: "flex", flexDirection: "column", position: "relative", overflow: "hidden",
     }}>
       <style>{`
         @keyframes twinkle { from{opacity:.1} to{opacity:.6} }
         @keyframes slideIn { from{opacity:0;transform:translateY(10px)} to{opacity:1;transform:translateY(0)} }
+        * { box-sizing: border-box; }
         ::-webkit-scrollbar { width: 4px; }
         ::-webkit-scrollbar-track { background: transparent; }
         ::-webkit-scrollbar-thumb { background: ${COLORS.border}; border-radius: 4px; }
-        select option { background: #0d2240; color: #e8edf5; }
+        select option { background: #0E2444; color: #F6F1E6; }
+        :focus-visible { outline: 2px solid ${COLORS.goldLight}; outline-offset: 2px; border-radius: 4px; }
+        input, button, select { font-family: 'Manrope', system-ui, sans-serif; }
       `}</style>
       <StarField />
 
@@ -1117,10 +1130,10 @@ export default function App() {
             </div>
           </div>
           <div>
-            <div style={{ fontFamily: "'Crimson Pro', Georgia, serif", fontSize: 17, fontWeight: 400, letterSpacing: "0.02em" }}>
-              Community Visualizer
+            <div style={{ fontFamily: "'Cormorant Garamond', Georgia, serif", fontSize: 20, fontWeight: 500, letterSpacing: "-0.01em", lineHeight: 1.2 }}>
+              Nucleus Visualizer
             </div>
-            <div style={{ fontSize: 11, color: COLORS.textMuted }}>Northern Illinois Subregion</div>
+            <div style={{ fontSize: 11, color: COLORS.textMuted, fontFamily: "'Manrope', system-ui, sans-serif" }}>Northern Illinois Subregion</div>
           </div>
         </div>
 
@@ -1132,11 +1145,12 @@ export default function App() {
 
         <div style={{ flex: 1, display: "flex", justifyContent: "flex-end" }}>
           <button onClick={() => setShowAddModal(true)} style={{
-            background: `linear-gradient(135deg, ${COLORS.teal}88, ${COLORS.blue2}88)`,
-            border: `1px solid ${COLORS.teal}44`, borderRadius: 12,
-            padding: "8px 18px", color: COLORS.tealLight, cursor: "pointer", fontSize: 13,
-            backdropFilter: "blur(8px)",
-          }}>+ Add Friend</button>
+            background: COLORS.greenLight,
+            border: "none", borderRadius: 8,
+            padding: "8px 18px", color: "#fff", cursor: "pointer", fontSize: 13,
+            fontFamily: "'Manrope', system-ui, sans-serif", fontWeight: 600,
+            transition: "background 180ms cubic-bezier(0.22,1,0.36,1)",
+          }}>+ Add friend</button>
         </div>
       </div>
 
@@ -1206,9 +1220,9 @@ export default function App() {
           <div style={{ flex: 1, display: "flex", gap: 20, padding: 24, overflow: "hidden" }}>
             <div style={{ flex: 1, overflow: "hidden", display: "flex", flexDirection: "column" }}>
               <div style={{ marginBottom: 16 }}>
-                <h2 style={{ margin: "0 0 4px", fontSize: 22, fontWeight: 400,
-                  fontFamily: "'Crimson Pro', Georgia, serif" }}>Friends & Participants</h2>
-                <p style={{ margin: 0, color: COLORS.textMuted, fontSize: 14 }}>{people.length} people in the subregion</p>
+                <h2 style={{ margin: "0 0 4px", fontSize: 28, fontWeight: 500,
+                  fontFamily: "'Cormorant Garamond', Georgia, serif", letterSpacing: "-0.01em" }}>Friends & participants</h2>
+                <p style={{ margin: 0, color: COLORS.textMuted, fontSize: 14 }}>{people.length} friends in the subregion</p>
               </div>
               <FilterBar filters={filters} setFilters={setFilters} />
               <div style={{ flex: 1, overflowY: "auto" }}>
@@ -1228,8 +1242,8 @@ export default function App() {
         {view === "nuclei" && (
           <div style={{ flex: 1, padding: 24, overflowY: "auto" }}>
             <div style={{ marginBottom: 20 }}>
-              <h2 style={{ margin: "0 0 4px", fontSize: 22, fontWeight: 400,
-                fontFamily: "'Crimson Pro', Georgia, serif" }}>Neighborhood Nuclei</h2>
+              <h2 style={{ margin: "0 0 4px", fontSize: 28, fontWeight: 500,
+                fontFamily: "'Cormorant Garamond', Georgia, serif", letterSpacing: "-0.01em" }}>Neighborhood nuclei</h2>
               <p style={{ margin: 0, color: COLORS.textMuted, fontSize: 14 }}>{NUCLEI.length} nuclei across the subregion</p>
             </div>
             <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(340px, 1fr))", gap: 16 }}>

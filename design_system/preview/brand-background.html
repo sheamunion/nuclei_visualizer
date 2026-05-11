@@ -1,0 +1,64 @@
+<!doctype html>
+<html><head><meta charset="utf-8"><link rel="stylesheet" href="../colors_and_type.css">
+<style>
+  html, body { margin: 0; padding: 0; height: 100%; }
+  body { background: #0A1A35; }
+  .frame {
+    position: relative;
+    width: 100%; height: 280px;
+    overflow: hidden;
+    /* Layered nebulae — multiple radial gradients give depth and motion-without-motion */
+    background:
+      /* warm gold-tinted nebula, upper-right */
+      radial-gradient(ellipse 55% 45% at 78% 22%, rgba(229,169,59,0.18) 0%, rgba(229,169,59,0.06) 35%, rgba(229,169,59,0) 70%),
+      /* mint nebula, lower-left, larger */
+      radial-gradient(ellipse 65% 55% at 18% 78%, rgba(155,227,184,0.22) 0%, rgba(155,227,184,0.08) 40%, rgba(155,227,184,0) 75%),
+      /* cool blue glow, center-left */
+      radial-gradient(ellipse 50% 60% at 32% 38%, rgba(132,153,185,0.28) 0%, rgba(132,153,185,0.10) 45%, rgba(132,153,185,0) 80%),
+      /* magenta-leaning nebula, deep right */
+      radial-gradient(ellipse 45% 40% at 88% 62%, rgba(194,106,82,0.16) 0%, rgba(194,106,82,0.05) 45%, rgba(194,106,82,0) 80%),
+      /* small soft white core */
+      radial-gradient(circle 80px at 55% 50%, rgba(255,255,255,0.10) 0%, rgba(255,255,255,0) 100%),
+      /* base sky */
+      radial-gradient(ellipse 100% 100% at 50% 50%, #15294A 0%, #0E2444 55%, #0A1A35 100%);
+  }
+  /* second pseudo-layer for additional dusty wisps + the starfield */
+  .frame::before {
+    content: "";
+    position: absolute; inset: 0;
+    background:
+      /* dusty diagonal wisp */
+      linear-gradient(115deg, transparent 30%, rgba(155,227,184,0.05) 45%, transparent 60%),
+      linear-gradient(60deg, transparent 40%, rgba(229,169,59,0.04) 55%, transparent 70%),
+      /* faint horizontal haze */
+      radial-gradient(ellipse 80% 25% at 50% 50%, rgba(246,241,230,0.05) 0%, rgba(246,241,230,0) 100%);
+    pointer-events: none;
+  }
+  .frame::after {
+    content: "";
+    position: absolute; inset: 0;
+    background-image: url('../assets/starfield-bg.svg');
+    background-size: cover; background-position: center;
+    /* hide the SVG's own background fill so only the stars show through */
+    mix-blend-mode: screen;
+    opacity: 0.85;
+    pointer-events: none;
+  }
+  .caption {
+    position: absolute; left: 16px; bottom: 12px;
+    font-family: var(--font-mono); font-size: 11px; color: var(--map-fg-muted);
+    z-index: 2;
+  }
+  .label {
+    position: absolute; top: 14px; left: 18px;
+    font-family: var(--font-display); font-size: 18px; color: var(--map-fg); font-weight: 500;
+    z-index: 2;
+    text-shadow: 0 1px 12px rgba(0,0,0,0.4);
+  }
+</style></head>
+<body>
+  <div class="frame">
+    <span class="label">Cosmic background</span>
+    <span class="caption">indigo-950 base · layered gold + mint + blue nebulae · starfield · no parallax</span>
+  </div>
+</body></html>
